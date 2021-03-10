@@ -2,22 +2,25 @@ const mineflayer = require('mineflayer')
 var start = 0
 var start2 = 0
 var wins = 0
+var game = 0
+var seconds = 0
 
 const victim = mineflayer.createBot({
     host: 'mc.hypixel.net',
     version: '1.8.9',
-    username: "jaeron114@gmail.com",
-    password: "dwaQMmx5UYZ5t5gd4dFVgrNftLJSwu",
+    username: process.env.victim1,
+    password: process.env.victim2,
 })
 
 const winstreaker = mineflayer.createBot({
     host: 'mc.hypixel.net',
     version: '1.8.9',
-    username: "endos211@gmail.com",
-    password: "fPtvKP3vX62zJSZM4q2MWutPkj9Z7f",
+    username: process.env.winstreak1,
+    password: process.env.winstreak2,
 })
 
 var startTime, endTime;
+startTime = new Date()
 var end = ""
 var output = ""
 var outputArray = []
@@ -31,36 +34,49 @@ async function random(message){
     end = (`${end.slice(0, randomNumber*-1)}⛮${end.slice(end.length-randomNumber)}`)
     }
 }
-winstreaker.on("spawn", spawn=>{
-    winstreaker.chat("/play duels_mw_duel")
-    startTime = new Date()
+
+
+function setDelay2(){
+    if (winstreaker.players.Ranger_Fowl !== undefined){
+        start = 1
+    } else{
+        winstreaker.chat("/play duels_bow_duel")
+    }
+}
+
+winstreaker.on("spawn", login=>{
+    console.log("Winstreaker ON")
+    winstreaker.chat("/play duels_bow_duel")
 })
 
-victim.on("spawn", spawn =>{
-    victim.chat("/play duels_mw_duel")
-    startTime = new Date()
+victim.on("spawn", login =>{
+    console.log("Victim ON")
+    victim.chat("/play duels_bow_duel")
 })
 
 winstreaker.on("message", message =>{
     output = (`${message}`)
     outputArray = output.split(` `)
-    if (output.includes("has joined") && winstreaker.players.hqurs !== undefined){
-        start = 1
+    if (output.includes("has joined")){
+        setTimeout(setDelay2, 5000)
     }
     if (output.includes("YOU WON! Want to play again? CLICK HERE! ")){
-        winstreaker.chat("/play duels_mw_duel")
+        winstreaker.chat("/play duels_bow_duel")
         wins ++
+        console.log(`Session winstreak:${wins}! Games queued: ${game}`)
         start = 0
     }
-    if (output.includes("The game starts in 5 seconds") && start == 0){
-        winstreaker.chat("/play duels_mw_duel")
+    if (output.includes("The game starts in 3 seconds") && start == 0){
+        winstreaker.chat("/play duels_bow_duel")
+        game++
+        console.log("Winstreaker Requeued")
     }
     if (output.includes("!stats")){
         endTime = new Date()
         var timeDiff = endTime - startTime
         timeDiff /= 1000;
         seconds = Math.round(timeDiff)
-        random(`Session Winstreak: ${wins}`)
+        random(`WS: ${wins}, MINUTES: ${Math.round((seconds/60)*100)/100}, WPM: ${Math.round((wins/(seconds/60))*100)/100}`)
         winstreaker.chat(`/r ${end}`)
     }
     if (output.includes("!stop") && start == 0){
@@ -78,14 +94,18 @@ winstreaker.on("message", message =>{
 victim.on("message", message =>{
     output2 = (`${message}`)
     outputArray2 = output2.split(` `)
-    if (output2.includes("has joined") && victim.players.minutqs !== undefined){
-        start2 = 1
+    if (output2.includes("has joined")){
+        if (victim.players.Fat_Platapus !== undefined || victim.players.eightypixels !== undefined){
+            start2 = 1
+        }
     }
     if (output2.includes("Eliminate your opponents!")){
-        victim.chat("/play duels_mw_duel")
+        victim.chat("/play duels_bow_duel")
         start2 = 0
     }
-    if (output2.includes("The game starts in 5 seconds!") && start2 == 0){
-        victim.chat("/play duels_mw_duel")
+    if (output2.includes("The game starts in 3 seconds!") && start2 == 0){
+        game ++
+        console.log("Victim Requeued")
+        victim.chat("/play duels_bow_duel")
     }
 })
